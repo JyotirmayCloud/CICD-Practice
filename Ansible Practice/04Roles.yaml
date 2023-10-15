@@ -1,0 +1,29 @@
+---
+- name: Role writing for create a file, add content and show that content to master node
+  hosts: all
+  become: true
+  gather_facts: false
+  var:
+    path: /home/ansible/myfile.txt
+
+  tasks:
+  - name: create a file 
+    file: 
+        path: "{{ path }}"
+        state: touch
+
+  - name: add create 
+    file:
+      path: "{{ path }}"
+      Blockinfile:
+      block: |
+        This is first line
+        This is second line 
+
+  - name: show the conetent
+    command: cat {{ path }}
+    register: myfile_register
+
+  - name: master node
+    deburg:
+      var: myfile_register

@@ -1,0 +1,93 @@
+#Create a file, append the text and show it in Master node 
+--- 
+- name: Create a file, append the text and show it in Master node 
+  hosts: all
+  gather_facts: false
+
+  tasks:
+  - name: create a file 
+    file:
+      path: /home/ansible/myfile.txt
+      state: touch 
+  
+  - name: appned the text to the file 
+    Blockinfile:
+    block: |
+      This is first line
+      This is second line
+
+  - name: display the content of the file 
+    shell: cat /home/ansible/myfile.txt
+    register: myfile_register
+
+  - name: display the content in Master node 
+    deburg:
+      var: myfile_register.stdout
+
+# Change the file chmod and chown or owenr of the file 
+
+---
+- name: Change the file chmod and chown or owenr of the file 
+  hosts: webservers
+  gather_facts: false
+
+  tasks:
+    - name: chnage the file chmod
+      file: 
+        path: /home/ansible/myfile.txt
+        mode: "0644"
+
+    - name: change the chown or owner of the file 
+      become: true
+      become_user: root
+      file:
+        path: /home/ansible/myfile.txt
+        owner: ansible
+        group: ansible
+
+# Create Directory, rename and delete DIRECTORY
+
+---
+- name: Create Directory, rename and delete DIRECTORY
+  hosts: webservers
+  gather_facts: false
+
+  tasks:
+    - name: Create Directory
+      file:
+        path: /home/ansible/mydir
+        state: directory
+
+    - name: rename the directory
+      command: mv /home/ansible/mydir /home/ansible/myrenamedir
+
+    - name: delete the directory
+      file:
+        path: /home/ansible/myrenamedir
+        state: absent 
+
+# CREATING NEW USER, ADDING EXISTED USER TO A GROUP, DELETE EXISTED USER
+
+---
+- name: CREATING NEW USER, ADDING EXISTED USER TO A GROUP, DELETE EXISTED USER
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: CREATING NEW USER
+      user:
+        name: admin
+        password: "{{ 'admin' | password_hash('sha512') }}"
+        state: present
+
+    - name: ADDING EXISTED USER TO A GROUP
+      user:
+        name: admin
+        group: ec2-user
+        append: yes
+
+    - name: Delete the existing user
+      user:
+        name: admin
+        state: absent

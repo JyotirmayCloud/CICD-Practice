@@ -1,0 +1,157 @@
+# 5. INSTALL MAVEN SOFTWARE FOR HOST MACHINES BASED ON PACKAGE MANAGER TYPE.
+---
+- name: Install MAVEN
+  hosts: webservers
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Update the apt cache (for Debian/ubuntu)
+      apt:
+        update_cache: yes
+      when: ansible_Pkg_mgr == 'apt'
+
+    - name: Install MAVEN
+      apt:
+       name: Maven 
+       state: present
+      when: ansible_Pkg_mgr == 'apt'
+
+    - name: install maven (for Red hat/CentOS)
+      yum: 
+        name: maven
+        state: present
+      when: ansible_Pkg_mgr == 'yum' or ansible_Pkg_mgr == 'dnf'
+
+    - name: install maven (for macOS)
+      homebrew: 
+        name: maven
+        state: present
+      when: ansible_Pkg_mgr == 'homebrew'
+
+    - name: verify Maven installations
+      command: mvn --version
+      register: maven_version
+
+    - name: Display maven --version
+      deburg:
+       var: maven_version.stdout_lines 
+
+# 5(B) INSTALL MAVEN SOFTWARE FOR HOST MACHINES BASED ON OS TYPE.
+
+---
+- name: Install Apache HTTP server 
+  hosts: all
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: update the apt cache (for Debian/ubuntu)
+      apt:
+        update_cache: yes
+      when: ansible_os_family == 'Debian'
+
+    - name: Install Apache HTTP server (Debian/Ubuntu)
+      apt:
+        name: apache2
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: install Apache HTTP server (CentOS/ RHEL)
+      yum:  
+        name: httpd
+        state: present
+      when: ansible_os_family == 'RedHat'
+
+    - name: start apache service
+      service:
+        name: apache2
+        state: started
+      when: ansible_os_family == 'Debian'
+
+    - name: Start Apache service
+      service:
+        name: httpd
+        state: started 
+      when: ansible_os_family == 'RedHat'
+
+# 6. INSTALL GIT IF NOT EXIST, CLONE A REPOSITORY
+
+---
+- name: Install git and clone repository 
+  hosts: webservers
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: check if git is installed 
+      command: git --version
+      register: git_check
+
+      ignore_error: true
+    - name: Install Git
+      package:
+        name: git
+        state: present
+      when: git_check.rc != 0
+
+    - name: clone the repository 
+      git:
+        repo: https://github.com/username/myapp.git
+        dest: /home/ansible/my-web-app
+
+# 7. INSTALL HTTPD + COPY index.html + START SERVICE
+
+---
+- name: 
+  hosts: all
+  become: true
+
+  tasks:
+    - name: install httpd
+      yum:
+        name: httpd
+        state: present
+    - name: copy index.html
+      copy:
+        src: index.html
+        dest: /var/www/html/index.html
+    - name: start Httpd server
+      service:
+        name: httpd
+        state: started
+
+# 8. SERVICE MODULE OPERATIONS START, STOP, ENABLE AND RESTART
+
+---
+- name: Manage httpd service
+  hosts: all
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Start httpd service
+      service:
+        name: httpd
+        state: started 
+
+    - name: Stop httpd service
+      service:
+        name: httpd
+        state: stoped
+
+    - name: Enable httpd service
+      service:
+        name: httpd
+        enabled: true
+    
+    - name: Restart httpd service
+      service:
+        name: httpd
+        state: restarted 
+
+#####################################################
+
+
+
+     

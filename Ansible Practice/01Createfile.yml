@@ -1,0 +1,96 @@
+#create a new file, add content to it and display the content in Master Node 
+
+---
+- name: Create a new file, add content and display the content to Master Node
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: create a new file
+      file:
+        path: /home/ansible/myfile.txt
+        state: touch
+
+    - name: Add content to the file
+      Blockinfile:
+        path: /home/ansible/myfile.txt
+        block: |
+          This is first line
+          This is second line
+          This is third line 
+
+    - name: display the content 
+      shell: cat /home/ansible/myfile.txt
+      register: myfile_register
+
+    - name: display the file content to the Master node 
+      deburg:
+        var: myfile_register.stdout
+
+# Change the file chmod and chown or owenr of the file 
+
+---
+- name: change the chmod and chown or owner of the file 
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: change the file mode
+      file:
+        path: /home/ansible/myfile.txt
+        mode: "0644"
+
+    - name: change the file owner
+      become: true
+      become_user: root
+      file:
+        path: /home/ansible/myfile.txt
+        owner: ansible
+        group: ansible
+
+# create a dir and rename it an delete it
+
+---
+- name: create a dir, rename it and delete it 
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: create a dir
+      file:
+        path: /home/ansible/mydir
+        state: directory
+
+    - name: rename it 
+      command: mv /home/ansible/mydir /home/ansible/myrenamedir
+
+    - name: delete the dir 
+      file:
+        path: /home/ansible/myrenamedir
+        state: absent
+
+# create a user and chnage the group 
+
+---
+- name: create a user and change the group
+  hosts: all
+  become: true
+  gather_facts: false  
+
+  tasks:
+    - name: create a user
+      user:
+        name: myuser
+        password: "{{ 'admin' | password:_hash('sha512') }}"
+        state: present
+
+    - name: Add the existing user to the group
+      user: 
+        name: myuser
+        group: ec2-user
+        append: yes
+
+    - name: delete the user
+      user:
+        name: myuser
+        state: absent
